@@ -29,7 +29,7 @@ namespace EchoBotDemo.Bots
                     },
                     cancellationToken);
             }
-            if (string.Equals(turnContext.Activity.Text, "image", System.StringComparison.InvariantCultureIgnoreCase))
+            else if (string.Equals(turnContext.Activity.Text, "image", System.StringComparison.InvariantCultureIgnoreCase))
             {
                 var reply = MessageFactory.Text("This is an inline attachment with image.");
                 reply.Attachments = new List<Attachment>() { GetInlineAttachment() };
@@ -38,7 +38,7 @@ namespace EchoBotDemo.Bots
             }
             else
             {
-                var replyText = $"Echo: {turnContext.Activity.Text}. Say 'wait'¡B'image' to watch me type.";
+                var replyText = $"Echo: {turnContext.Activity.Text}. Say 'wait','image' to watch me type.";
                 await turnContext.SendActivityAsync(MessageFactory.Text(replyText, replyText), cancellationToken);
             }
         }
@@ -57,14 +57,14 @@ namespace EchoBotDemo.Bots
 
         private static Attachment GetInlineAttachment()
         {
-            var imagePath = Path.Combine(Environment.CurrentDirectory, @"Resources", "architecture-resize.png");
+            var imagePath = Path.Combine(Environment.CurrentDirectory, @"Resources", "architecture-resize.pdf");
             var imageData = Convert.ToBase64String(File.ReadAllBytes(imagePath));
 
             return new Attachment
             {
-                Name = @"Resources\architecture-resize.png",
-                ContentType = "image/png",
-                ContentUrl = $"data:image/png;base64,{imageData}",
+                Name = @"architecture-resize.pdf",
+                ContentType = "application/pdf",
+                ContentUrl = $"data:application/pdf;base64,{imageData}",
             };
         }
 
