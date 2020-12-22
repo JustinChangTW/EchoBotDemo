@@ -9,6 +9,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Connector;
 using Microsoft.Bot.Schema;
 
 namespace EchoBotDemo.Bots
@@ -43,9 +44,17 @@ namespace EchoBotDemo.Bots
 
                 await turnContext.SendActivityAsync(reply, cancellationToken);
             }
+            else if (string.Equals(turnContext.Activity.Text, "upload", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var reply = MessageFactory.Text("This is an Internet Attachment with upload.");
+                var uploadedAttachment = await GetUploadedAttachmentAsync(turnContext, turnContext.Activity.ServiceUrl, turnContext.Activity.Conversation.Id, cancellationToken);
+                reply.Attachments = new List<Attachment>() { uploadedAttachment };
+
+                await turnContext.SendActivityAsync(reply, cancellationToken);
+            }
             else
             {
-                var replyText = $"Echo: {turnContext.Activity.Text}. Say 'wait','image' to watch me type.";
+                var replyText = $"Echo: {turnContext.Activity.Text}. Say 'wait','image','upload', to watch me type.";
                 await turnContext.SendActivityAsync(MessageFactory.Text(replyText, replyText), cancellationToken);
             }
         }
@@ -85,6 +94,40 @@ namespace EchoBotDemo.Bots
                 ContentUrl = "https://docs.microsoft.com/en-us/bot-framework/media/how-it-works/architecture-resize.png",
             };
         }
+        private static async Task<Attachment> GetUploadedAttachmentAsync(ITurnContext turnContext, string serviceUrl, string conversationId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(serviceUrl))
+            {
+                throw new ArgumentNullException(nameof(serviceUrl));
+            }
 
+            if (string.IsNullOrWhiteSpace(conversationId))
+            {
+                throw new ArgumentNullException(nameof(conversationId));
+            }
+
+            var imagePath = Path.Combine(Environment.CurrentDirectory, @"Resources", "architecture-resize.png");
+
+            var connector = turnContext.TurnState.Get<IConnectorClient>() as ConnectorClient;
+            var attachments = new Attachments(connector);
+            var response = await attachments.Client.Conversations.UploadAttachmentAsync(
+                conversationId,
+                new AttachmentData
+                {
+                    Name = @"Resources\architecture-resize.png",
+                    OriginalBase64 = File.ReadAllBytes(imagePath),
+                    Type = "image/png",
+                },
+                cancellationToken);
+
+            var attachmentUri = attachments.GetAttachmentUri(response.Id);
+
+            return new Attachment
+            {
+                Name = @"architecture-resize.png",
+                ContentType = "image/png",
+                ContentUrl = attachmentUri,
+            };
+        }
     }
 }
