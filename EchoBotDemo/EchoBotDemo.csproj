@@ -16,4 +16,13 @@
     </Content>
   </ItemGroup>
 
+    <ItemGroup>
+      <None Update="Resources\architecture-resize.pdf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Resources\architecture-resize.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
