@@ -3,7 +3,9 @@
 //
 // Generated with Bot Builder V4 SDK Template for Visual Studio EchoBot v4.11.1
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
@@ -27,9 +29,16 @@ namespace EchoBotDemo.Bots
                     },
                     cancellationToken);
             }
+            if (string.Equals(turnContext.Activity.Text, "image", System.StringComparison.InvariantCultureIgnoreCase))
+            {
+                var reply = MessageFactory.Text("This is an inline attachment with image.");
+                reply.Attachments = new List<Attachment>() { GetInlineAttachment() };
+
+                await turnContext.SendActivityAsync(reply, cancellationToken);
+            }
             else
             {
-                var replyText = $"Echo: {turnContext.Activity.Text}. Say 'wait' to watch me type.";
+                var replyText = $"Echo: {turnContext.Activity.Text}. Say 'wait'¡B'image' to watch me type.";
                 await turnContext.SendActivityAsync(MessageFactory.Text(replyText, replyText), cancellationToken);
             }
         }
@@ -45,5 +54,19 @@ namespace EchoBotDemo.Bots
                 }
             }
         }
+
+        private static Attachment GetInlineAttachment()
+        {
+            var imagePath = Path.Combine(Environment.CurrentDirectory, @"Resources", "architecture-resize.png");
+            var imageData = Convert.ToBase64String(File.ReadAllBytes(imagePath));
+
+            return new Attachment
+            {
+                Name = @"Resources\architecture-resize.png",
+                ContentType = "image/png",
+                ContentUrl = $"data:image/png;base64,{imageData}",
+            };
+        }
+
     }
 }
