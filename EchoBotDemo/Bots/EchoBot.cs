@@ -31,8 +31,15 @@ namespace EchoBotDemo.Bots
             }
             else if (string.Equals(turnContext.Activity.Text, "image", System.StringComparison.InvariantCultureIgnoreCase))
             {
-                var reply = MessageFactory.Text("This is an inline attachment with image.");
+                var reply = MessageFactory.Text("This is an inline attachment with file.");
                 reply.Attachments = new List<Attachment>() { GetInlineAttachment() };
+
+                await turnContext.SendActivityAsync(reply, cancellationToken);
+            }
+            else if (string.Equals(turnContext.Activity.Text, "uri", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var reply = MessageFactory.Text("This is an Internet Attachment with file.");
+                reply.Attachments = new List<Attachment>() { GetInternetAttachment() };
 
                 await turnContext.SendActivityAsync(reply, cancellationToken);
             }
@@ -65,6 +72,17 @@ namespace EchoBotDemo.Bots
                 Name = @"architecture-resize.pdf",
                 ContentType = "application/pdf",
                 ContentUrl = $"data:application/pdf;base64,{imageData}",
+            };
+        }
+
+        private static Attachment GetInternetAttachment()
+        {
+            // ContentUrl must be HTTPS.
+            return new Attachment
+            {
+                Name = @"Resources\architecture-resize.png",
+                ContentType = "image/png",
+                ContentUrl = "https://docs.microsoft.com/en-us/bot-framework/media/how-it-works/architecture-resize.png",
             };
         }
 
