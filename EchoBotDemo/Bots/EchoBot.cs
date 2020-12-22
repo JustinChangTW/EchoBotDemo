@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Connector;
 using Microsoft.Bot.Schema;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace EchoBotDemo.Bots
 {
@@ -58,9 +60,18 @@ namespace EchoBotDemo.Bots
                 var reply = MessageFactory.Attachment(card.ToAttachment());
                 await turnContext.SendActivityAsync(reply, cancellationToken);
             }
+            else if (string.Equals(turnContext.Activity.Text, "adaptive", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var cardAttachment = CreateAdaptiveCardAttachment(Path.Combine(".", "Resources", "adaptiveCard.json"));
+
+                await turnContext.SendActivityAsync(MessageFactory.Attachment(cardAttachment), cancellationToken);
+
+                await turnContext.SendActivityAsync(MessageFactory.Text("Please enter any text to see another card."), cancellationToken);
+            }
             else
             {
-                var replyText = $"Echo: {turnContext.Activity.Text}. Say 'wait','image','upload', to watch me type.";
+                var text = turnContext.Activity.Text ?? (turnContext.Activity.Value as JObject)["PolicyNo"].Value<string>();
+                var replyText = $"Echo: {text}. Say 'wait','image','upload','adaptive', to watch me type.";
                 await turnContext.SendActivityAsync(MessageFactory.Text(replyText, replyText), cancellationToken);
             }
         }
@@ -161,6 +172,17 @@ namespace EchoBotDemo.Bots
             return card;
         }
 
+
+        private static Attachment CreateAdaptiveCardAttachment(string filePath)
+        {
+            var adaptiveCardJson = File.ReadAllText(filePath);
+            var adaptiveCardAttachment = new Attachment()
+            {
+                ContentType = "application/vnd.microsoft.card.adaptive",
+                Content = JsonConvert.DeserializeObject(adaptiveCardJson),
+            };
+            return adaptiveCardAttachment;
+        }
 
     }
 }
