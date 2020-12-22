@@ -52,6 +52,12 @@ namespace EchoBotDemo.Bots
 
                 await turnContext.SendActivityAsync(reply, cancellationToken);
             }
+            else if (string.Equals(turnContext.Activity.Text, "card", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var card = GetHeroCard();
+                var reply = MessageFactory.Attachment(card.ToAttachment());
+                await turnContext.SendActivityAsync(reply, cancellationToken);
+            }
             else
             {
                 var replyText = $"Echo: {turnContext.Activity.Text}. Say 'wait','image','upload', to watch me type.";
@@ -89,7 +95,7 @@ namespace EchoBotDemo.Bots
             // ContentUrl must be HTTPS.
             return new Attachment
             {
-                Name = @"Resources\architecture-resize.png",
+                Name = @"architecture-resize.png",
                 ContentType = "image/png",
                 ContentUrl = "https://docs.microsoft.com/en-us/bot-framework/media/how-it-works/architecture-resize.png",
             };
@@ -129,5 +135,32 @@ namespace EchoBotDemo.Bots
                 ContentUrl = attachmentUri,
             };
         }
+
+
+        public static HeroCard GetHeroCard()
+        {
+            var card = new HeroCard
+            {
+                Title = "英雄卡",
+                Subtitle = "關羽",
+                Text = $@"
+關羽（約160年－220年）[註 1]，字雲長，本字長生，司隸河東解良人（今山西省運城市），約生於東漢桓帝延熹年間[註 2]，
+漢末三國時劉備的主要親信和將領。與張飛並稱「萬人敵」[1]。建安四年（199年），受封漢壽亭侯。.....。
+",
+                Images = new List<CardImage> { new CardImage("https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/God_Guan_Yu_Jinguashi_02.jpg/374px-God_Guan_Yu_Jinguashi_02.jpg") },
+                Buttons = new List<CardAction> { new CardAction(ActionTypes.OpenUrl, "更多", value: "https://zh.wikipedia.org/wiki/%E5%85%B3%E7%BE%BD") },
+            };
+
+
+            //var card = new SigninCard
+            //{
+            //    Text = "BotFramework Sign-in Card",
+            //    Buttons = new List<CardAction> { new CardAction(ActionTypes.Signin, "Sign-in", value: "https://login.microsoftonline.com/") },
+            //};
+
+            return card;
+        }
+
+
     }
 }
