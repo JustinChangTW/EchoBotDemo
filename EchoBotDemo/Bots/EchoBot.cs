@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+ï»¿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 //
 // Generated with Bot Builder V4 SDK Template for Visual Studio EchoBot v4.11.1
@@ -29,11 +29,11 @@ namespace EchoBotDemo.Bots
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            //¨ú±o°O¿ıªº·|¸Üª¬ºA
+            //å–å¾—è¨˜éŒ„çš„æœƒè©±ç‹€æ…‹
             var conversationStateAccessors = _conversationState.CreateProperty<ConversationData>(nameof(ConversationData));
             var conversationData = await conversationStateAccessors.GetAsync(turnContext, () => new ConversationData());
 
-            //¨ú±o¨Ï¥ÎªÌ¿é¤Jªº¸ê®Æ
+            //å–å¾—ä½¿ç”¨è€…è¼¸å…¥çš„è³‡æ–™
             var userStateAccessors = _userState.CreateProperty<UserProfile>(nameof(UserProfile));
             var userProfile = await userStateAccessors.GetAsync(turnContext, () => new UserProfile());
 
@@ -42,9 +42,9 @@ namespace EchoBotDemo.Bots
             {
                 await turnContext.SendActivitiesAsync(
                     new Activity[] {
-                new Activity { Type = ActivityTypes.Typing }, // ¥¿¦b¿é¤Jªºª¬ºA
-                new Activity { Type = "delay", Value= 15000 }, //µ¥«İ15¬í
-                MessageFactory.Text("Finished typing", "Finished typing"),  //¦^À³ªºµ²ªG
+                new Activity { Type = ActivityTypes.Typing }, // æ­£åœ¨è¼¸å…¥çš„ç‹€æ…‹
+                new Activity { Type = "delay", Value= 15000 }, //ç­‰å¾…15ç§’
+                MessageFactory.Text("Finished typing", "Finished typing"),  //å›æ‡‰çš„çµæœ
                 MessageFactory.Text("Finished typing2", "Finished typing2"),
                 MessageFactory.Text("Finished typing3", "Fi1nished typing3"),
                     },
@@ -108,12 +108,12 @@ namespace EchoBotDemo.Bots
                         userProfile.Name = turnContext.Activity.Text?.Trim();
 
                         // Acknowledge that we got their name.
-                        await turnContext.SendActivityAsync($"ÁÂÁÂ±z {userProfile.Name}. ½ĞÀH·N¿é¤J±z­n»¡ªº¸Ü");
+                        await turnContext.SendActivityAsync($"è¬è¬æ‚¨ {userProfile.Name}. è«‹éš¨æ„è¼¸å…¥æ‚¨è¦èªªçš„è©±");
                     }
                     else
                     {
                         // Prompt the user for their name.
-                        await turnContext.SendActivityAsync($"±z«ç»òºÙ©I?");
+                        await turnContext.SendActivityAsync($"æ‚¨æ€éº¼ç¨±å‘¼?");
 
                         // Set the flag to true, so we don't prompt in the next turn.
                         conversationData.PromptedUserForName = true;
@@ -149,7 +149,7 @@ namespace EchoBotDemo.Bots
                 {
                     Actions = new List<CardAction>()
                     {
-                        new CardAction() { Title = "½Ğ¿é¤J¨Ï¥ÎªÌ©m¦W", Type = ActionTypes.ImBack, Value = "username", Image = "https://via.placeholder.com/20/FF0000?text=R", ImageAltText = "R" },
+                        new CardAction() { Title = "è«‹è¼¸å…¥ä½¿ç”¨è€…å§“å", Type = ActionTypes.ImBack, Value = "username", Image = "https://via.placeholder.com/20/FF0000?text=R", ImageAltText = "R" },
                         new CardAction() { Title = "wait", Type = ActionTypes.ImBack, Value = "wait", Image = "https://via.placeholder.com/20/FF0000?text=R", ImageAltText = "R" },
                         new CardAction() { Title = "image", Type = ActionTypes.ImBack, Value = "image", Image = "https://via.placeholder.com/20/FFFF00?text=Y", ImageAltText = "Y" },
                         new CardAction() { Title = "upload", Type = ActionTypes.ImBack, Value = "upload", Image = "https://via.placeholder.com/20/0000FF?text=B", ImageAltText = "B"   },
@@ -248,14 +248,14 @@ namespace EchoBotDemo.Bots
         {
             var card = new HeroCard
             {
-                Title = "­^¶¯¥d",
-                Subtitle = "Ãö¦Ğ",
+                Title = "è‹±é›„å¡",
+                Subtitle = "é—œç¾½",
                 Text = @"  
-Ãö¦Ğ¡]¬ù160¦~¡Ğ220¦~¡^[µù 1]¡A¦r¶³ªø¡A¥»¦rªø¥Í¡A¥qÁõªeªF¸Ñ¨}¤H¡]¤µ¤s¦è¬Ù¹B«°¥«¡^¡A¬ù¥Í©óªFº~®Ù«Ò©µ¿Q¦~¶¡[µù2]¡A
-º~¥½¤T°ê®É¼B³Æªº¥D­n¿Ë«H©M±N»â¡C»P±i­¸¨ÃºÙ¡u¸U¤H¼Ä¡v[1]¡C«Ø¦w¥|¦~¡]199¦~¡^¡A¨ü«Êº~¹Ø«F«J¡C.....¡C
+é—œç¾½ï¼ˆç´„160å¹´ï¼220å¹´ï¼‰[è¨» 1]ï¼Œå­—é›²é•·ï¼Œæœ¬å­—é•·ç”Ÿï¼Œå¸éš¸æ²³æ±è§£è‰¯äººï¼ˆä»Šå±±è¥¿çœé‹åŸå¸‚ï¼‰ï¼Œç´„ç”Ÿæ–¼æ±æ¼¢æ¡“å¸å»¶ç†¹å¹´é–“[è¨»2]ï¼Œ
+æ¼¢æœ«ä¸‰åœ‹æ™‚åŠ‰å‚™çš„ä¸»è¦è¦ªä¿¡å’Œå°‡é ˜ã€‚èˆ‡å¼µé£›ä¸¦ç¨±ã€Œè¬äººæ•µã€[1]ã€‚å»ºå®‰å››å¹´ï¼ˆ199å¹´ï¼‰ï¼Œå—å°æ¼¢å£½äº­ä¾¯ã€‚.....ã€‚
 ",
                 Images = new List<CardImage> { new CardImage("https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/God_Guan_Yu_Jinguashi_02.jpg/374px-God_Guan_Yu_Jinguashi_02.jpg") },
-                Buttons = new List<CardAction> { new CardAction(ActionTypes.OpenUrl, "§ó¦h", value: "https://zh.wikipedia.org/wiki/%E5%85%B3%E7%BE%BD") }
+                Buttons = new List<CardAction> { new CardAction(ActionTypes.OpenUrl, "æ›´å¤š", value: "https://zh.wikipedia.org/wiki/%E5%85%B3%E7%BE%BD") }
             };
 
 
