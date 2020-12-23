@@ -165,8 +165,8 @@ namespace EchoBotDemo.Bots
             {
                 Title = "英雄卡",
                 Subtitle = "關羽",
-                Text = $@"
-關羽（約160年－220年）[註 1]，字雲長，本字長生，司隸河東解良人（今山西省運城市），約生於東漢桓帝延熹年間[註 2]，
+                Text = @"  
+關羽（約160年－220年）[註 1]，字雲長，本字長生，司隸河東解良人（今山西省運城市），約生於東漢桓帝延熹年間[註2]，
 漢末三國時劉備的主要親信和將領。與張飛並稱「萬人敵」[1]。建安四年（199年），受封漢壽亭侯。.....。
 ",
                 Images = new List<CardImage> { new CardImage("https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/God_Guan_Yu_Jinguashi_02.jpg/374px-God_Guan_Yu_Jinguashi_02.jpg") },
