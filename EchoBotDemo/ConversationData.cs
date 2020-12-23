@@ -11,5 +11,16 @@ namespace EchoBotDemo
         public string ChannelId { get; set; }
         public bool PromptedUserForName { get; set; } = false;
         public bool PromptedUserForAge { get; set; } = false;
+
+        public Question LastQuestionAsked { get; set; } = Question.None;
+
+    }
+
+    public enum Question
+    {
+        Name,
+        Age,
+        Date,
+        None,
     }
 }

@@ -97,47 +97,34 @@ namespace EchoBotDemo.Bots
 
                 await turnContext.SendActivityAsync(reply, cancellationToken);
             }
-            else if (conversationData.PromptedUserForName ||  string.Equals(turnContext.Activity.Text, "username", StringComparison.InvariantCultureIgnoreCase))
+            else if (conversationData.LastQuestionAsked!= Question.None ||  string.Equals(turnContext.Activity.Text, "username", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (string.IsNullOrEmpty(userProfile.Name))
+                var text = turnContext.Activity.Text?.Trim();
+                string replyText = "";
+                switch (conversationData.LastQuestionAsked)
                 {
-                    // First time around this is set to false, so we will prompt user for name.
-                    if (conversationData.PromptedUserForName)
-                    {
-                        // Set the name to what the user provided.
-                        userProfile.Name = turnContext.Activity.Text?.Trim();
+                    case Question.None:
+                        userProfile.Name = text;
+                        conversationData.LastQuestionAsked = Question.Name;
+                        replyText = $"請輸入您的姓名？";
+                        break;
+                    case Question.Name:
+                        userProfile.Name = text;
+                        conversationData.LastQuestionAsked = Question.Age;
+                        replyText = $"您的姓名是:{userProfile.Name}，請輸入您的年齡？";
+                        break;
+                    case Question.Age:
+                        userProfile.Age = int.Parse(text);
+                        conversationData.LastQuestionAsked = Question.None;
 
-                        // Acknowledge that we got their name.
-                        await turnContext.SendActivityAsync($"謝謝您 {userProfile.Name}. 請隨意輸入您要說的話");
-                    }
-                    else
-                    {
-                        // Prompt the user for their name.
-                        await turnContext.SendActivityAsync($"您怎麼稱呼?");
+                        replyText = @$"
+您的姓名是:{userProfile.Name}，
+您的年齡是{userProfile.Age}";
 
-                        // Set the flag to true, so we don't prompt in the next turn.
-                        conversationData.PromptedUserForName = true;
-                    }
+                        break;
                 }
-                else
-                {
-                    userProfile.Other = turnContext.Activity.Text?.Trim();
-
-                    // Add message details to the conversation data.
-                    // Convert saved Timestamp to local DateTimeOffset, then to string for display.
-                    var messageTimeOffset = (DateTimeOffset)turnContext.Activity.Timestamp;
-                    var localMessageTime = messageTimeOffset.ToLocalTime();
-                    conversationData.Timestamp = localMessageTime.ToString();
-                    conversationData.ChannelId = turnContext.Activity.ChannelId.ToString();
-
-                    // Display state data.
-                    await turnContext.SendActivityAsync($"{userProfile.Name} sent: {turnContext.Activity.Text}");
-                    await turnContext.SendActivityAsync($"Message received at: {conversationData.Timestamp}");
-                    await turnContext.SendActivityAsync($"Message received from: {conversationData.ChannelId}");
-                    await turnContext.SendActivityAsync($"Message other from: {userProfile.Other}");
-                    conversationData.PromptedUserForName = false;
-                }
-                //await turnContext.SendActivityAsync(reply, cancellationToken);
+                var reply = MessageFactory.Text(replyText);
+                await turnContext.SendActivityAsync(reply, cancellationToken);
             }
             else
             {
