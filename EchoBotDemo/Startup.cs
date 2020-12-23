@@ -27,6 +27,22 @@ namespace EchoBotDemo
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //儲存
+
+            // Create the storage we'll be using for User and Conversation state.
+            // (Memory is great for testing purposes - examples of implementing storage with
+            // Azure Blob Storage or Cosmos DB are below).
+            var storage = new MemoryStorage();
+
+            // Create the User state passing in the storage layer.
+            var userState = new UserState(storage);
+            services.AddSingleton(userState);
+
+            // Create the Conversation state passing in the storage layer.
+            var conversationState = new ConversationState(storage);
+            services.AddSingleton(conversationState);
+
+
             services.AddControllers().AddNewtonsoftJson();
 
             // Create the Bot Framework Adapter with error handling enabled.

@@ -18,8 +18,26 @@ namespace EchoBotDemo.Bots
 {
     public class EchoBot : ActivityHandler
     {
+        private readonly ConversationState _conversationState;
+        private readonly UserState _userState;
+
+        public EchoBot(ConversationState conversationState, UserState userState)
+        {
+            _conversationState = conversationState;
+            _userState = userState;
+        }
+
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
+            //取得記錄的會話狀態
+            var conversationStateAccessors = _conversationState.CreateProperty<ConversationData>(nameof(ConversationData));
+            var conversationData = await conversationStateAccessors.GetAsync(turnContext, () => new ConversationData());
+
+            //取得使用者輸入的資料
+            var userStateAccessors = _userState.CreateProperty<UserProfile>(nameof(UserProfile));
+            var userProfile = await userStateAccessors.GetAsync(turnContext, () => new UserProfile());
+
+
             if (string.Equals(turnContext.Activity.Text, "wait", System.StringComparison.InvariantCultureIgnoreCase))
             {
                 await turnContext.SendActivitiesAsync(
@@ -79,15 +97,59 @@ namespace EchoBotDemo.Bots
 
                 await turnContext.SendActivityAsync(reply, cancellationToken);
             }
+            else if (conversationData.PromptedUserForName ||  string.Equals(turnContext.Activity.Text, "username", StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (string.IsNullOrEmpty(userProfile.Name))
+                {
+                    // First time around this is set to false, so we will prompt user for name.
+                    if (conversationData.PromptedUserForName)
+                    {
+                        // Set the name to what the user provided.
+                        userProfile.Name = turnContext.Activity.Text?.Trim();
+
+                        // Acknowledge that we got their name.
+                        await turnContext.SendActivityAsync($"謝謝您 {userProfile.Name}. 請隨意輸入您要說的話");
+                    }
+                    else
+                    {
+                        // Prompt the user for their name.
+                        await turnContext.SendActivityAsync($"您怎麼稱呼?");
+
+                        // Set the flag to true, so we don't prompt in the next turn.
+                        conversationData.PromptedUserForName = true;
+                    }
+                }
+                else
+                {
+                    userProfile.Other = turnContext.Activity.Text?.Trim();
+
+                    // Add message details to the conversation data.
+                    // Convert saved Timestamp to local DateTimeOffset, then to string for display.
+                    var messageTimeOffset = (DateTimeOffset)turnContext.Activity.Timestamp;
+                    var localMessageTime = messageTimeOffset.ToLocalTime();
+                    conversationData.Timestamp = localMessageTime.ToString();
+                    conversationData.ChannelId = turnContext.Activity.ChannelId.ToString();
+
+                    // Display state data.
+                    await turnContext.SendActivityAsync($"{userProfile.Name} sent: {turnContext.Activity.Text}");
+                    await turnContext.SendActivityAsync($"Message received at: {conversationData.Timestamp}");
+                    await turnContext.SendActivityAsync($"Message received from: {conversationData.ChannelId}");
+                    await turnContext.SendActivityAsync($"Message other from: {userProfile.Other}");
+                    conversationData.PromptedUserForName = false;
+                }
+                //await turnContext.SendActivityAsync(reply, cancellationToken);
+            }
             else
             {
                 var text = turnContext.Activity.Text ?? (turnContext.Activity.Value as JObject)["PolicyNo"].Value<string>();
+                
                 var replyText = $"Echo: {text}. Say 'wait','image','upload','adaptive','carousel', to watch me type.";
                 var reply = MessageFactory.Text(replyText, replyText);
                 reply.SuggestedActions = new SuggestedActions()
                 {
                     Actions = new List<CardAction>()
                     {
+                        new CardAction() { Title = "請輸入使用者姓名", Type = ActionTypes.ImBack, Value = "username", Image = "https://via.placeholder.com/20/FF0000?text=R", ImageAltText = "R" },
                         new CardAction() { Title = "wait", Type = ActionTypes.ImBack, Value = "wait", Image = "https://via.placeholder.com/20/FF0000?text=R", ImageAltText = "R" },
                         new CardAction() { Title = "image", Type = ActionTypes.ImBack, Value = "image", Image = "https://via.placeholder.com/20/FFFF00?text=Y", ImageAltText = "Y" },
                         new CardAction() { Title = "upload", Type = ActionTypes.ImBack, Value = "upload", Image = "https://via.placeholder.com/20/0000FF?text=B", ImageAltText = "B"   },
@@ -111,6 +173,16 @@ namespace EchoBotDemo.Bots
                 }
             }
         }
+
+        public override async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            await base.OnTurnAsync(turnContext, cancellationToken);
+
+            // Save any state changes that might have occurred during the turn.
+            await _conversationState.SaveChangesAsync(turnContext, false, cancellationToken);
+            await _userState.SaveChangesAsync(turnContext, false, cancellationToken);
+        }
+
 
         private static Attachment GetInlineAttachment()
         {
