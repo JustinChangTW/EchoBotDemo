@@ -11,6 +11,9 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Connector;
 using Microsoft.Bot.Schema;
+using Microsoft.Recognizers.Text;
+using Microsoft.Recognizers.Text.DateTime;
+using Microsoft.Recognizers.Text.Number;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -99,30 +102,8 @@ namespace EchoBotDemo.Bots
             }
             else if (conversationData.LastQuestionAsked!= Question.None ||  string.Equals(turnContext.Activity.Text, "username", StringComparison.InvariantCultureIgnoreCase))
             {
-                var text = turnContext.Activity.Text?.Trim();
                 string replyText = "";
-                switch (conversationData.LastQuestionAsked)
-                {
-                    case Question.None:
-                        userProfile.Name = text;
-                        conversationData.LastQuestionAsked = Question.Name;
-                        replyText = $"請輸入您的姓名？";
-                        break;
-                    case Question.Name:
-                        userProfile.Name = text;
-                        conversationData.LastQuestionAsked = Question.Age;
-                        replyText = $"您的姓名是:{userProfile.Name}，請輸入您的年齡？";
-                        break;
-                    case Question.Age:
-                        userProfile.Age = int.Parse(text);
-                        conversationData.LastQuestionAsked = Question.None;
-
-                        replyText = @$"
-您的姓名是:{userProfile.Name}，
-您的年齡是{userProfile.Age}";
-
-                        break;
-                }
+                replyText = FillOutUserProfileAsync(turnContext, conversationData, userProfile, replyText);
                 var reply = MessageFactory.Text(replyText);
                 await turnContext.SendActivityAsync(reply, cancellationToken);
             }
@@ -147,6 +128,51 @@ namespace EchoBotDemo.Bots
 
                 await turnContext.SendActivityAsync(reply, cancellationToken);
             }
+        }
+
+        private static string FillOutUserProfileAsync(ITurnContext<IMessageActivity> turnContext, ConversationData conversationData, UserProfile userProfile, string replyText)
+        {
+            var text = turnContext.Activity.Text?.Trim();
+            var message = "";
+            switch (conversationData.LastQuestionAsked)
+            {
+                case Question.None:
+                    userProfile.Name = text;
+                    conversationData.LastQuestionAsked = Question.Name;
+                    replyText = $"請輸入您的姓名？";
+                    break;
+                case Question.Name:
+                    if(ValidateName(text,out var name,out message))
+                    {
+                        userProfile.Name = name;
+                        conversationData.LastQuestionAsked = Question.Age;
+                        replyText = $"您的姓名是:{userProfile.Name}，請輸入您的年齡？";
+                    }
+                    else
+                    {
+                        replyText = message ?? $"對不起，我不明白。";
+                    }
+
+                    break;
+                case Question.Age:
+                    if(ValidateAge(text, out var age, out message))
+                    {
+                        userProfile.Age = age;
+                        conversationData.LastQuestionAsked = Question.None;
+
+                        replyText = @$"
+您的姓名是:{userProfile.Name}，
+您的年齡是{userProfile.Age}";
+                    }
+                    else
+                    {
+                        replyText = message ?? $"對不起，我不明白。";
+                    }
+
+                    break;
+            }
+
+            return replyText;
         }
 
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
@@ -265,6 +291,61 @@ namespace EchoBotDemo.Bots
                 Content = JsonConvert.DeserializeObject(adaptiveCardJson),
             };
             return adaptiveCardAttachment;
+        }
+
+
+
+        private static bool ValidateName(string input, out string name, out string message)
+        {
+            name = null;
+            message = null;
+
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                message = "請輸入至少包含一個字符的名稱。";
+            }
+            else
+            {
+                name = input.Trim();
+            }
+
+            return message is null;
+        }
+
+        private static bool ValidateAge(string input, out int age, out string message)
+        {
+            age = 0;
+            message = null;
+
+            // Try to recognize the input as a number. This works for responses such as "twelve" as well as "12".
+            try
+            {
+                // Attempt to convert the Recognizer result to an integer. This works for "a dozen", "twelve", "12", and so on.
+                // The recognizer returns a list of potential recognition results, if any.
+
+                var results = NumberRecognizer.RecognizeNumber(input, Culture.Chinese);
+
+                foreach (var result in results)
+                {
+                    // The result resolution is a dictionary, where the "value" entry contains the processed string.
+                    if (result.Resolution.TryGetValue("value", out var value))
+                    {
+                        age = Convert.ToInt32(value);
+                        if (age >= 18 && age <= 120)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                message = "請輸入18至120之間的年齡。";
+            }
+            catch
+            {
+                message = "抱歉，我無法將其解釋為年齡。請輸入18至120之間的年齡。";
+            }
+
+            return message is null;
         }
 
     }
