@@ -83,7 +83,20 @@ namespace EchoBotDemo.Bots
             {
                 var text = turnContext.Activity.Text ?? (turnContext.Activity.Value as JObject)["PolicyNo"].Value<string>();
                 var replyText = $"Echo: {text}. Say 'wait','image','upload','adaptive','carousel', to watch me type.";
-                await turnContext.SendActivityAsync(MessageFactory.Text(replyText, replyText), cancellationToken);
+                var reply = MessageFactory.Text(replyText, replyText);
+                reply.SuggestedActions = new SuggestedActions()
+                {
+                    Actions = new List<CardAction>()
+                    {
+                        new CardAction() { Title = "wait", Type = ActionTypes.ImBack, Value = "wait", Image = "https://via.placeholder.com/20/FF0000?text=R", ImageAltText = "R" },
+                        new CardAction() { Title = "image", Type = ActionTypes.ImBack, Value = "image", Image = "https://via.placeholder.com/20/FFFF00?text=Y", ImageAltText = "Y" },
+                        new CardAction() { Title = "upload", Type = ActionTypes.ImBack, Value = "upload", Image = "https://via.placeholder.com/20/0000FF?text=B", ImageAltText = "B"   },
+                        new CardAction() { Title = "adaptive", Type = ActionTypes.ImBack, Value = "adaptive", Image = "https://via.placeholder.com/20/FFFFFF?text=B", ImageAltText = "B"   },
+                        new CardAction() { Title = "carousel", Type = ActionTypes.ImBack, Value = "carousel", Image = "https://via.placeholder.com/20/008000?text=B", ImageAltText = "Green"   },
+                    },
+                };
+
+                await turnContext.SendActivityAsync(reply, cancellationToken);
             }
         }
 
