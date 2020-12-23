@@ -70,12 +70,8 @@ namespace EchoBotDemo.Bots
             }
             else if (string.Equals(turnContext.Activity.Text, "carousel", StringComparison.InvariantCultureIgnoreCase))
             {
-                // Cards are sent as Attachments in the Bot Framework.
-                // So we need to create a list of attachments for the reply activity.
-                var attachments = new List<Attachment>();
 
-                // Reply to the activity we received with an activity.
-                var reply = MessageFactory.Attachment(attachments);
+                var reply = MessageFactory.Attachment(new List<Attachment>());
                 reply.AttachmentLayout = AttachmentLayoutTypes.Carousel;
                 reply.Attachments.Add(CreateAdaptiveCardAttachment(Path.Combine(".", "Resources", "adaptiveCard.json")));
                 reply.Attachments.Add(CreateAdaptiveCardAttachment(Path.Combine(".", "Resources", "adaptiveCard.json")));
@@ -174,7 +170,7 @@ namespace EchoBotDemo.Bots
 漢末三國時劉備的主要親信和將領。與張飛並稱「萬人敵」[1]。建安四年（199年），受封漢壽亭侯。.....。
 ",
                 Images = new List<CardImage> { new CardImage("https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/God_Guan_Yu_Jinguashi_02.jpg/374px-God_Guan_Yu_Jinguashi_02.jpg") },
-                Buttons = new List<CardAction> { new CardAction(ActionTypes.OpenUrl, "更多", value: "https://zh.wikipedia.org/wiki/%E5%85%B3%E7%BE%BD") },
+                Buttons = new List<CardAction> { new CardAction(ActionTypes.OpenUrl, "更多", value: "https://zh.wikipedia.org/wiki/%E5%85%B3%E7%BE%BD") }
             };
 
 
