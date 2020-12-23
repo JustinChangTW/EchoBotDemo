@@ -68,10 +68,25 @@ namespace EchoBotDemo.Bots
 
                 await turnContext.SendActivityAsync(MessageFactory.Text("Please enter any text to see another card."), cancellationToken);
             }
+            else if (string.Equals(turnContext.Activity.Text, "carousel", StringComparison.InvariantCultureIgnoreCase))
+            {
+                // Cards are sent as Attachments in the Bot Framework.
+                // So we need to create a list of attachments for the reply activity.
+                var attachments = new List<Attachment>();
+
+                // Reply to the activity we received with an activity.
+                var reply = MessageFactory.Attachment(attachments);
+                reply.AttachmentLayout = AttachmentLayoutTypes.Carousel;
+                reply.Attachments.Add(CreateAdaptiveCardAttachment(Path.Combine(".", "Resources", "adaptiveCard.json")));
+                reply.Attachments.Add(CreateAdaptiveCardAttachment(Path.Combine(".", "Resources", "adaptiveCard.json")));
+                reply.Attachments.Add(CreateAdaptiveCardAttachment(Path.Combine(".", "Resources", "adaptiveCard.json")));
+
+                await turnContext.SendActivityAsync(reply, cancellationToken);
+            }
             else
             {
                 var text = turnContext.Activity.Text ?? (turnContext.Activity.Value as JObject)["PolicyNo"].Value<string>();
-                var replyText = $"Echo: {text}. Say 'wait','image','upload','adaptive', to watch me type.";
+                var replyText = $"Echo: {text}. Say 'wait','image','upload','adaptive','carousel', to watch me type.";
                 await turnContext.SendActivityAsync(MessageFactory.Text(replyText, replyText), cancellationToken);
             }
         }
