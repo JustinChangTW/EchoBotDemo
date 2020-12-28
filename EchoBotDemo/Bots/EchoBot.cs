@@ -4,6 +4,7 @@
 // Generated with Bot Builder V4 SDK Template for Visual Studio EchoBot v4.11.1
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -23,11 +24,13 @@ namespace EchoBotDemo.Bots
     {
         private readonly ConversationState _conversationState;
         private readonly UserState _userState;
+        private readonly ConcurrentDictionary<string, ConversationReference> _conversationReferences;
 
-        public EchoBot(ConversationState conversationState, UserState userState)
+        public EchoBot(ConversationState conversationState, UserState userState, ConcurrentDictionary<string,ConversationReference> conversationReferences)
         {
             _conversationState = conversationState;
             _userState = userState;
+            _conversationReferences = conversationReferences;
         }
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
@@ -97,6 +100,7 @@ namespace EchoBotDemo.Bots
                 reply.Attachments.Add(CreateAdaptiveCardAttachment(Path.Combine(".", "Resources", "adaptiveCard.json")));
                 reply.Attachments.Add(CreateAdaptiveCardAttachment(Path.Combine(".", "Resources", "adaptiveCard.json")));
                 reply.Attachments.Add(CreateAdaptiveCardAttachment(Path.Combine(".", "Resources", "adaptiveCard.json")));
+                reply.Attachments.Add(GetHeroCard().ToAttachment());
 
                 await turnContext.SendActivityAsync(reply, cancellationToken);
             }
@@ -348,5 +352,19 @@ namespace EchoBotDemo.Bots
             return message is null;
         }
 
+
+
+        private void AddConversationReference(Activity activity)
+        {
+            var conversationReference = activity.GetConversationReference();
+            _conversationReferences.AddOrUpdate(conversationReference.User.Id, conversationReference, (key, newValue) => conversationReference);
+        }
+
+        protected override Task OnConversationUpdateActivityAsync(ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
+        {
+            AddConversationReference(turnContext.Activity as Activity);
+
+            return base.OnConversationUpdateActivityAsync(turnContext, cancellationToken);
+        }
     }
 }

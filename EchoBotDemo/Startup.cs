@@ -12,6 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using EchoBotDemo.Bots;
+using Microsoft.Bot.Schema;
+using System.Collections.Concurrent;
 
 namespace EchoBotDemo
 {
@@ -41,6 +43,9 @@ namespace EchoBotDemo
             // Create the Conversation state passing in the storage layer.
             var conversationState = new ConversationState(storage);
             services.AddSingleton(conversationState);
+
+
+            services.AddSingleton<ConcurrentDictionary<string, ConversationReference>>();
 
 
             services.AddControllers().AddNewtonsoftJson();
