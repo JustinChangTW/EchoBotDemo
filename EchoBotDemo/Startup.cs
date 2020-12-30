@@ -14,6 +14,7 @@ using Microsoft.Extensions.Hosting;
 using EchoBotDemo.Bots;
 using Microsoft.Bot.Schema;
 using System.Collections.Concurrent;
+using Microsoft.Bot.Builder.Azure;
 
 namespace EchoBotDemo
 {
@@ -34,7 +35,16 @@ namespace EchoBotDemo
             // Create the storage we'll be using for User and Conversation state.
             // (Memory is great for testing purposes - examples of implementing storage with
             // Azure Blob Storage or Cosmos DB are below).
-            var storage = new MemoryStorage();
+            //var storage = new MemoryStorage();
+            var storage = new CosmosDbPartitionedStorage(
+                    new CosmosDbPartitionedStorageOptions
+                    {
+                        CosmosDbEndpoint = Configuration.GetValue<string>("CosmosDbEndpoint"),
+                        AuthKey = Configuration.GetValue<string>("CosmosDbAuthKey"),
+                        DatabaseId = Configuration.GetValue<string>("CosmosDbDatabaseId"),
+                        ContainerId = Configuration.GetValue<string>("CosmosDbContainerId"),
+                        CompatibilityMode = false,
+                    });
 
             // Create the User state passing in the storage layer.
             var userState = new UserState(storage);
@@ -44,6 +54,7 @@ namespace EchoBotDemo
             var conversationState = new ConversationState(storage);
             services.AddSingleton(conversationState);
 
+            services.AddSingleton<IStorage>(storage);
 
             services.AddSingleton<ConcurrentDictionary<string, ConversationReference>>();
 

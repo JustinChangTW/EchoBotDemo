@@ -7,6 +7,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
@@ -25,12 +26,15 @@ namespace EchoBotDemo.Bots
         private readonly ConversationState _conversationState;
         private readonly UserState _userState;
         private readonly ConcurrentDictionary<string, ConversationReference> _conversationReferences;
+        private readonly IStorage _storage;
 
-        public EchoBot(ConversationState conversationState, UserState userState, ConcurrentDictionary<string,ConversationReference> conversationReferences)
+        public EchoBot(ConversationState conversationState, UserState userState, 
+            ConcurrentDictionary<string,ConversationReference> conversationReferences, IStorage storage)
         {
             _conversationState = conversationState;
             _userState = userState;
             _conversationReferences = conversationReferences;
+            _storage = storage;
         }
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
@@ -354,17 +358,71 @@ namespace EchoBotDemo.Bots
 
 
 
-        private void AddConversationReference(Activity activity)
+        private void AddConversationReference(Activity activity, CancellationToken cancellationToken)
         {
+
+
             var conversationReference = activity.GetConversationReference();
-            _conversationReferences.AddOrUpdate(conversationReference.User.Id, conversationReference, (key, newValue) => conversationReference);
+
+            //從storage取得資料
+            var notifiesStorage = new List<Notify>();
+            try
+            {
+                notifiesStorage = _storage.ReadAsync<List<Notify>>(new string[] { "Notify" }).Result?.Values.FirstOrDefault();
+                notifiesStorage = notifiesStorage ?? new List<Notify>();
+            }
+            catch
+            {
+                notifiesStorage = notifiesStorage ?? new List<Notify>();
+            }
+
+            //從storage同步到memory
+            if (notifiesStorage != null)
+            {
+                foreach (var item in notifiesStorage.Distinct())
+                {
+                    _conversationReferences.AddOrUpdate(item.Id, conversationReference, (key, newValue) => conversationReference);
+                }
+            }
+
+            //刪除登出的使用者
+            if (activity.MembersRemoved != null)
+            {
+                foreach (var item in activity.MembersRemoved)
+                {
+                    ConversationReference reference;
+
+                    _conversationReferences.TryRemove(item.Id, out reference);
+                }
+            }
+
+            //加入新的使用者
+            var changes = new Dictionary<string, object>();
+            if (activity.MembersAdded != null)
+            {
+                foreach (var item in activity.MembersAdded)
+                {
+                    _conversationReferences.AddOrUpdate(item.Id, conversationReference, (key, newValue) => conversationReference);
+
+                    notifiesStorage.Add(new Notify { Id = item.Id });
+                }
+            }
+
+            changes.Add("Notify", notifiesStorage.Distinct().ToList());
+            _storage.WriteAsync(changes, cancellationToken);
+
+            //_conversationReferences.AddOrUpdate(conversationReference.User.Id, conversationReference, (key, newValue) => conversationReference);
         }
 
         protected override Task OnConversationUpdateActivityAsync(ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
-            AddConversationReference(turnContext.Activity as Activity);
+            AddConversationReference(turnContext.Activity as Activity, cancellationToken);
 
             return base.OnConversationUpdateActivityAsync(turnContext, cancellationToken);
         }
+    }
+    class Notify
+    {
+        public string Id { get; set; }
     }
 }
